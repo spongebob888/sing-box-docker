@@ -1,0 +1,164 @@
+{
+  "log":{
+    "level":"info"
+  },
+  "inbounds":[
+    {
+    "type":"vmess",
+    "tag":"vmess-ws-in",
+    "listen":"127.0.0.1",
+    "listen_port":16823,
+    "tcp_fast_open":true,
+    "udp_fragment":true,
+    "sniff":true,
+    "sniff_override_destination":true,
+    "proxy_protocol":false,
+    "proxy_protocol_accept_no_header":false,
+    "users":[
+      {
+      "name":"me",
+      "uuid":"uuid", // replace with your uuid
+      "alterId":0
+    }
+    ],
+    "transport":{
+      "type":"ws",
+      "path":"/websocketpath",
+      "max_early_data":0,
+      "early_data_header_name":"Sec-WebSocket-Protocol"
+    }
+  },
+    {
+    "type":"vmess",
+    "tag":"vmess-h2-in",
+    "listen":"127.0.0.1",
+    "listen_port":16824,
+    "tcp_fast_open":true,
+    "udp_fragment":true,
+    "sniff":true,
+    "sniff_override_destination":true,
+    "proxy_protocol":false,
+    "proxy_protocol_accept_no_header":false,
+    "users":[
+      {
+      "name":"me",
+      "uuid":"uuid",
+      "alterId":0
+    }
+    ],
+    "transport":{
+      "type":"http",
+      "path":"/h2path"
+    }
+  },
+    {
+    "type":"vmess",
+    "tag":"vmess-grpc-in",
+    "listen":"127.0.0.1",
+    "listen_port":16825,
+    "tcp_fast_open":true,
+    "udp_fragment":true,
+    "sniff":true,
+    "sniff_override_destination":true,
+    "proxy_protocol":false,
+    "proxy_protocol_accept_no_header":false,
+    "users":[
+      {
+      "name":"me",
+      "uuid":"uuid",
+      "alterId":0
+    }
+    ],
+    "transport":{
+      "type":"grpc",
+      "service_name":"service_name" // Your service name for grcp
+    }
+  },
+    {
+    "type":"vmess",
+    "tag":"vmess-h3-in",
+    "listen":"::",
+    "listen_port":16826,
+    "tcp_fast_open":true,
+    "udp_fragment":true,
+    "sniff":true,
+    "sniff_override_destination":true,
+    "proxy_protocol":false,
+    "proxy_protocol_accept_no_header":false,
+    "users":[
+      {
+      "name":"me",
+      "uuid":"uuid",
+      "alterId":0
+    }
+    ],
+    "tls":{
+      "enabled":true,
+      "server_name":"your server_name",
+      "certificate_path": "/root/cert/your cert path", //Your certificate
+      "key_path": "/root/cert/your key path"
+    },
+    "transport":{
+      "type":"quic"
+    }
+  },
+    {
+    "type": "shadowtls",
+    "listen": "::",
+    "listen_port": 8443,
+    "version": 2,
+    "handshake": {
+      "server": "microsoft.com",
+      "server_port": 443
+    },
+    "detour": "shadowsocks-in"
+  },
+    {
+    "type": "shadowsocks",
+    "tag": "shadowsocks-in",
+    "listen": "127.0.0.1",
+    "method": "2022-blake3-aes-128-gcm",
+    "password": "k9hWBCfA9rQ5P30x25M9" // random password encoded by base64
+  },
+    {
+    "type": "socks", // A socks inbound for other proxy to route the traffic. For example,use it for route naiveproxy traffic
+    "tag": "socks-in",
+    "listen": "127.0.0.1",
+    "listen_port": 1089
+  }
+  ],
+  "outbounds":[
+    {
+    "type":"direct",
+    "tag":"direct"
+  },
+    {
+    "type":"block",
+    "tag":"block"
+  },
+    {
+    "type":"socks", // Cloudflare Warp Socks output for Netflix Unlocking
+    "tag":"socks-out",
+    "server":"127.0.0.1",
+    "server_port":40000 // Set it to your cloudflare warp proxy port
+  }
+  ],
+  "route": {
+    "rules": [
+     // Block all the traffic to China. Uncomment this if used in China
+    // {
+    //   "geoip": [
+    //     "cn"
+    //   ],
+    //   "outbound": "block"
+    // },
+      {
+      "geosite": [
+        "netflix",
+        "hbo"
+      ],
+      "outbound": "socks-out"
+    }
+    ]
+  }
+}

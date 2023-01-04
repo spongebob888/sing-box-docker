@@ -1,0 +1,83 @@
+# The Caddyfile is an easy way to configure your Caddy web server.
+#
+# Unless the file starts with a global options block, the first
+# uncommented line is always the address of your site.
+#
+# To use your own domain name (with automatic HTTPS), first make
+# sure your domain's A/AAAA DNS records are properly pointed to
+# this machine's public IP, then replace ":80" below with your
+# domain name.
+{
+	order reverse_proxy before route
+	log {
+		level INFO
+	}
+}
+
+websocket.yourserver.com {
+	# websocket + tls + vmess inbound
+	root * /usr/share/caddy
+	file_server
+	tls yourmail@email.com
+	@sb_websocket {
+		path /websocketpath
+		header Connection Upgrade
+		header Upgrade websocket
+	}
+	reverse_proxy @sb_websocket localhost:16823
+
+}
+h2.yourserver.com {
+	# http2 + tls + vmess inbound
+	root * /usr/share/caddy
+	tls yourmail@email.com
+	file_server
+	reverse_proxy /h2path localhost:16824 {
+		transport http {
+			versions h2c
+		}
+	}
+
+}
+niaveproxy.yourserver.com {
+	# naiveproxy inbound
+	root * /usr/share/caddy
+	tls yourmail@email.com
+	route {
+		forward_proxy {
+			basic_auth username password #Set a user and password
+			hide_ip
+			hide_via
+			probe_resistance
+			upstream  socks5://localhost:1089 #Upstrem inbound to route traffic and Netflix Unlock
+		}
+		file_server
+	}
+
+}
+
+grpc.yourserver.com {
+	tls yourmail@email.com
+	@vgrpc {
+		protocol grpc
+		path /service_name/* #your service_name
+	}
+	reverse_proxy @vgrpc h2c://127.0.0.1:16825 { # To your local sing-box listen address
+		transport http {
+			versions h2c 2
+		}
+		flush_interval -1
+		header_up X-Real-IP {remote_host}
+	}
+
+	@host {
+		host grpc.yourserver.com # Restrict to hostname visit.
+	}
+	route @host {
+		header {
+			Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" #Using HSTS
+		}
+		root * /usr/share/caddy
+		file_server 
+	}
+}

@@ -1,0 +1,26 @@
+version: "3"
+services:
+  sing-box:
+    restart: always
+    image: danxiaonuo/sing-box:latest
+    container_name: sing-box
+    volumes:
+      - ./sing-box/sing-box.json:/etc/sing-box/config.json
+      - ./caddy/caddy_cert:/root/cert/
+    entrypoint: sing-box run -c /etc/sing-box/config.json
+    network_mode: "host"
+
+  caddy:
+    image: pocat/naiveproxy
+    container_name: caddy2_naiveproxy
+    restart: always
+    network_mode: "host"
+    environment:
+      PATH: "/etc/naiveproxy/Caddyfile"
+    volumes:
+      - ./caddy/Caddyfile:/etc/naiveproxy/Caddyfile
+      - ./caddy/caddy_cert:/root/.local/share/caddy/certificates/
+      - ./caddy/caddy_config:/root/.config/
+      - ./caddy/www:/usr/share/caddy/
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro

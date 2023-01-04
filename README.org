@@ -1,0 +1,92 @@
+#+TITLE: sing-box and naiveproxy docker template
+#+date: <2023-01-04 三>
+
+* Introduction
+This is a repository of sing-box and naiveproxy docker configuration template.
+
+
+* Inbounds
+
+** vmess + websocket + tls
+This inbound is reverse proxied by caddy and it supports CDN forward.
+
+*** Configuration
+
+   1. Change the *uuid* in this configuration. How to generate uuid? [[https://www.uuidgenerator.net/][click here]].
+
+   2. Change the domain name *websocket.yourserver.com* in =./caddy/Caddyfile= to your own domain. No domain name? Go to [[https://www.freenom.com][Freenom]].
+
+   3. (*Optional*) Change the websocket path in =./sing-box/sing-box.json= and =./caddy/Caddyfile=.
+
+
+** vmess + http2 + tls
+
+This inbound is reverse proxied by caddy.
+
+*** Configuration
+
+   1. Change the *uuid* in this configuration. How to generate uuid? [[https://www.uuidgenerator.net/][click here]].
+
+   2. Change the domain name *h2.yourserver.com* in =./caddy/Caddyfile= to your own domain. No domain name? Go to [[https://www.freenom.com][Freenom]].
+
+   3. (*Optional*) Change the http2 path in =./sing-box/sing-box.json= and =./caddy/Caddyfile=.
+
+** vmess + grpc + tls
+
+This inbound is reverse proxied by caddy and it supports CDN forward (Cloudflare).
+
+*** Configuration
+
+   1. Change the *uuid* in this configuration. How to generate uuid? [[https://www.uuidgenerator.net/][click here]].
+
+   2. Change the domain name *grpc.yourserver.com* in =./caddy/Caddyfile= to your own domain. No domain name? Go to [[https://www.freenom.com][Freenom]].
+
+   3. (*Optional*) Change the service_name in =./sing-box/sing-box.json= and =./caddy/Caddyfile=.
+
+
+** naiveproxy
+ Naiveproxy is provided by caddy (with naiveproxy plugin). But its traffic is forwarded to sing-box socks inbound to
+ route the traffic in order to unlock the netflix and hbomax.
+
+*** Configuration
+
+   1. Change the username and password in the naiveproxy inbound in the =./caddy/Caddyfile=.
+
+** vmess + http3(quic)
+
+  This inbound is *not* reverse proxied by caddy. According to my test, it works in sing-box client but failed for v2ray or xray client.
+
+*** Configuration
+
+    1. Change the *uuid* in this configuration. How to generate uuid? [[https://www.uuidgenerator.net/][click here]].
+
+    2. Set the certificate and key path in the =./sing-box/sing-box.json= to the certificate genereated by caddy. It locates
+       in =./caddy/caddy_cert/=. Notice that it needs time to generate a certificate for caddy in the fisrt time run.
+
+** shadowsocks + shadowtls
+
+  This inbound is directly handled by sing-box and is independent from caddy.
+
+*** Configuration
+
+    1. Change the password in the configuration file =./sing-box/sing-box.json=. You can use openssl to generate a
+       random password by command =openssl rand -base64 15=
+    2. Change the handshake server =microsoft.com= to a legal domain name in your country.
+
+* Outbounds
+
+  There are two outbounds here. One is for direct connection. The other is forwarded by cloudflare warp.
+  If you do not need cloudflare outbound, delete the rules in the sing-box configuration file =./sing-box/sing-box.json=.
+
+  For China users it is recommended to block all the traffic back to China.
+
+** Cloudflare Warp Configuration.
+
+   1. Install cloudflare warp client. [[https://developers.cloudflare.com/warp-client/get-started/linux/][Check here!]]
+
+   2. Set the warp to proxy mode by command  =warp-cli set-mode proxy=
+
+   3. Start warp by =warp-cli register= and =warp-cli connect=
+
+   4. Check whether the Netflix is unlocked. If not reconnect the warp until it get unlocked. Reconnect can by done
+      througe =warp-cli disconnect= and =warp-cli connect=
