@@ -2,7 +2,7 @@ version: "3"
 services:
   sing-box:
     restart: always
-    image: danxiaonuo/sing-box:latest
+    image: ghcr.io/sagernet/sing-box:latest
     container_name: sing-box
     volumes:
       - ./sing-box/sing-box.json:/etc/sing-box/config.json
